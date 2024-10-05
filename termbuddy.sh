@@ -7,10 +7,17 @@ tebu() {
     jump)
       if [[ -z "$2" ]]; then
         search_dir="${TERMBUDDY_HOME:-$(pwd)}"
-        cd "$search_dir" || echo "TERMBUDDY_HOME not set or directory does not exist"
+        cd "$search_dir" || { echo "TERMBUDDY_HOME not set or directory does not exist"; return 1; }
       else
         search_dir="${TERMBUDDY_HOME:-$(pwd)}"
-        cd "$(cd "$search_dir" && rg --files | rg "$2" | fzf | xargs dirname)"
+        target_dir=$(rg --files "$search_dir" | rg "$2" | fzf | xargs dirname)
+
+        if [[ -n "$target_dir" ]]; then
+          cd "$target_dir" || { echo "Directory not found: $target_dir"; return 1; }
+        else
+          echo "No matching directory found for: $2"
+          return 1
+        fi
       fi
       ;;
     *)
